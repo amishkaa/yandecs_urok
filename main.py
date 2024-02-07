@@ -5,6 +5,7 @@ from PIL import Image
 from PyQt5 import uic
 from PyQt5.QtWidgets import QWidget, QMainWindow, QApplication
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt
 import os
 
 
@@ -15,6 +16,7 @@ class Map(QMainWindow):
 
         self.geocoder_api_server = "http://geocode-maps.yandex.ru"
         self.toponym_to_find = "г. Калуга"
+        self.delta = "0.005"
 
         self.init()
 
@@ -38,12 +40,10 @@ class Map(QMainWindow):
         # Долгота и широта:
         toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
 
-        delta = "0.005"
-
         # Собираем параметры для запроса к StaticMapsAPI:
         map_params = {
             "ll": ",".join([toponym_longitude, toponym_lattitude]),
-            "spn": ",".join([delta, delta]),
+            "spn": ",".join([self.delta, self.delta]),
             "l": "map"
         }
 
@@ -58,6 +58,14 @@ class Map(QMainWindow):
         os.remove("map.png")
 
     def init(self):
+        self.load_map()
+
+    def wheelEvent(self, event):
+        if event.angleDelta().y() > 0 and float(self.delta) > 0.00005:
+            self.delta = str(float(self.delta) - float(self.delta) * 0.25)
+        if event.angleDelta().y() < 0 and float(self.delta) < 20:
+            self.delta = str(float(self.delta) + float(self.delta) * 0.25)
+
         self.load_map()
 
 
