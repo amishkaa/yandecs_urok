@@ -15,8 +15,9 @@ class Map(QMainWindow):
         uic.loadUi("untitled.ui", self)
 
         self.geocoder_api_server = "http://geocode-maps.yandex.ru"
-        self.toponym_to_find = "г. Калуга"
         self.delta = "0.005"
+        self.geocode = "г. Калуга"
+        self.toponym_coordinates = "37, 55"
 
         self.init()
 
@@ -25,8 +26,10 @@ class Map(QMainWindow):
 
         geocoder_params = {
             "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
-            "geocode": self.toponym_to_find,
-            "format": "json"}
+            "geocode": self.geocode,
+            "ll": self.toponym_coordinates,
+            "format": "json"
+        }
 
         response = requests.get(geocoder_api_server, params=geocoder_params)
 
@@ -36,9 +39,9 @@ class Map(QMainWindow):
         toponym = json_response["response"]["GeoObjectCollection"][
             "featureMember"][0]["GeoObject"]
         # Координаты центра топонима:
-        toponym_coodrinates = toponym["Point"]["pos"]
+        self.toponym_coordinates = toponym["Point"]["pos"]
         # Долгота и широта:
-        toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
+        toponym_longitude, toponym_lattitude = self.toponym_coordinates.split(" ")
 
         # Собираем параметры для запроса к StaticMapsAPI:
         map_params = {
@@ -66,6 +69,27 @@ class Map(QMainWindow):
         if event.angleDelta().y() < 0 and float(self.delta) < 20:
             self.delta = str(float(self.delta) + float(self.delta) * 0.25)
 
+        self.load_map()
+
+    def keyPressEvent(self, event):
+        self.longitude = float(self.toponym_coordinates.split()[0])
+        self.lattitude = float(self.toponym_coordinates.split()[1])
+        if event.key() == Qt.Key_Up:
+            print(1)
+            self.lattitude += 0.05
+        if event.key() == Qt.Key_Down:
+            print(12)
+            self.lattitude -= 0.05
+        if event.key() == Qt.Key_Left:
+            print(13)
+            self.longitude -= 1
+        if event.key() == Qt.Key_Right:
+            print(4)
+            self.longitude += 0.05
+
+        print(self.longitude, self.lattitude)
+        self.toponym_coordinates = f"{str(self.longitude)}, {str(self.lattitude)}"
+        print(self.toponym_coordinates)
         self.load_map()
 
 
